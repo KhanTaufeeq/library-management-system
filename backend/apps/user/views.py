@@ -1,11 +1,13 @@
 from django.shortcuts import render
-from . models import User 
+from django.contrib.auth.models import User
+from . models import MyUser 
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.hashers import make_password
+from django.views.decorators.csrf import csrf_exempt
 import json
 # Create your views here.
 
+@csrf_exempt
 def signup(request):
   if request.method == 'POST':
     try:
@@ -25,40 +27,46 @@ def signup(request):
       return JsonResponse({'error': 'This username already exists'}, status = 400)
     elif User.objects.filter(email = email).exists():
       return JsonResponse({'error': 'This email already exists'}, status = 400)
-    elif User.objects.filter(contact = contact).exists():
-      return JsonResponse({'error': 'This phone number already exists'}, status = 400)
+    # elif User.objects.filter(contact = contact).exists():
+    #   return JsonResponse({'error': 'This phone number already exists'}, status = 400)
     else:
-      user = User.objects.create(
+      user = User.objects.create_user(
         username = username,
         email = email,
-        contact = contact,
-        password = make_password(password) # hash the password
+        password = password,
+        first_name = first_name,
+        last_name = last_name
       )
-      user.first_name = first_name
-      user.last_name = last_name
-      user.save()
+      user.is_staff = False
+      user.is_superuser = False
+
+      myuser = MyUser.objects.create(user = user, contact = contact )
+      myuser.save()
 
       # return success response
       return JsonResponse({'message': 'Your account has been created successfully'}, status = 200)
   else:
     return JsonResponse({'error': 'Invalid request method'}, status = 405)
 
+@csrf_exempt
 def signin(request):
   if request.method == 'POST':
     user_data = json.loads(request.body)
     username = user_data.get('username')
     password = user_data.get('password')
 
-    user = authenticate(request, username = username, password = password)
+    myuser = authenticate(request, username = username, password = password)
 
-    if user is not None:
-      login(request, user)
-      return JsonResponse({'message': 'You are successfully logged in :)', 'user_id':user.id}, status = 200)
+    if myuser is not None:
+      login(request, myuser)
+      return JsonResponse({'message': 'You are successfully logged in :) ', 'user_id':myuser.id}, status = 200)
     else:
-      return JsonResponse({'error': 'No such user :('})
+      return JsonResponse({'error': 'No such user :( '}, status = 400)
   else:
     return JsonResponse({'error': 'Invalid request method'}, status = 405)
 
+
+@csrf_exempt
 def signout(request):
   logout(request)
 
