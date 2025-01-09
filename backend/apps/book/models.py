@@ -1,5 +1,5 @@
 from django.db import models
-
+from django.contrib.auth.models import User
 # Create your models here.
 # Tables/collections should include:
 # Books (title, author, publication year, availability status).
@@ -15,3 +15,14 @@ class Book(models.Model):
 
   def __str__(self):
     return self.title
+
+
+class Transaction(models.Model):
+
+  user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transaction')
+  book = models.ForeignKey(Book, on_delete=models.CASCADE, related_name='transaction')
+  borrow_date = models.DateField('Borrow Date', auto_now_add = True, blank=False, null=False)
+  return_date = models.DateField('Return Date', default = None , blank = True, null=True)
+
+  def __str__(self):
+    return self.user.username

@@ -1,11 +1,9 @@
-from django.shortcuts import render
 from django.contrib.auth.models import User
 from . models import MyUser 
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.csrf import csrf_exempt
 import json
-# Create your views here.
 
 @csrf_exempt
 def signup(request):
@@ -27,8 +25,6 @@ def signup(request):
       return JsonResponse({'error': 'This username already exists'}, status = 400)
     elif User.objects.filter(email = email).exists():
       return JsonResponse({'error': 'This email already exists'}, status = 400)
-    # elif User.objects.filter(contact = contact).exists():
-    #   return JsonResponse({'error': 'This phone number already exists'}, status = 400)
     else:
       user = User.objects.create_user(
         username = username,
